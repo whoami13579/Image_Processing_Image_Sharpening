@@ -1,0 +1,13 @@
+/.venv/
+/build/
+/dist/
+/submission/
+/outputs/
+/test_image/
+/HW2_test_image/
+/report/Image_Sharpening_Report.pdf
+/report/student.json
+/tmp/
+__pycache__/
+.pytest_cache/
+*.py[cod]

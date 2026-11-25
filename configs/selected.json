@@ -1,0 +1,13 @@
+{
+  "defaults": {
+    "alpha": 0.18, "neighbors": 4, "size": 5, "sigma": 0.9, "high_boost": 1.4,
+    "gamma_l": 0.88, "gamma_h": 1.10, "cutoff": 0.025, "c": 1.0, "preserve_dc": true,
+    "frequency_cutoff": 0.10, "frequency_gain": 0.12
+  },
+  "images": {
+    "2-2.png": {"high_boost": 1.3, "gamma_l": 0.90},
+    "2-3.png": {"alpha": 0.14, "sigma": 0.8, "high_boost": 1.25, "gamma_l": 0.91, "gamma_h": 1.08, "frequency_gain": 0.08},
+    "2-5.png": {"alpha": 0.14, "sigma": 0.8, "high_boost": 1.25, "gamma_l": 0.91, "gamma_h": 1.08, "frequency_gain": 0.08},
+    "2-6.png": {"gamma_l": 0.92, "frequency_gain": 0.10}
+  }
+}
