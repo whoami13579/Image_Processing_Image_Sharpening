@@ -19,7 +19,11 @@ The CLI runs all five methods by default. Use `--method laplacian`, `--method un
 
 ### Desktop viewer
 
-Open the source viewer with `uv run --locked python run_homework.py`. With a runnable Windows build, double-click `dist/ImageSharpening.exe` to open the same viewer. Select an image from the dropdown or navigate with Previous, Next, or the arrow keys. Double-click a panel to inspect it at native resolution. Spectrum opens the saved spectrum and response plot. Regenerate preview computes all five methods for the active image in a background thread and keeps the preview in memory.
+Open the source viewer with `uv run --locked python run_homework.py`. With a runnable Windows build, double-click `dist/ImageSharpening.exe`. The main window shows the original and five results in a 2 × 3 grid, followed by the log-image spectrum and the three filter-response curves side by side. The dropdown, Previous/Next buttons, and Left/Right keys switch the images, plots, and parameters together.
+
+The images and plots resize with the window and preserve their aspect ratios. Use the vertical scrollbar or mouse wheel when the window is shorter. Double-click an image or the plot pair for native-resolution inspection.
+
+**Regenerate preview** computes all five methods and renders the corresponding plots in a background thread. The viewer updates the images, parameters, and plots together. You can navigate while it runs and return to the processed image to see its preview. Previews leave the saved files untouched. If a saved spectrum is missing or unreadable, the viewer keeps the saved images visible and prompts you to select **Regenerate preview**.
 
 The module defaults to CLI mode. The desktop launcher defaults to GUI mode when given no arguments. Both accept `--gui`, `--cli`, `--input`, `--output`, `--config`, and `--help`. The GUI searches for data beside the executable, in the project when run from `dist/`, and in the executable bundle. CLI output defaults to `outputs` in the working directory for source mode and beside the executable for frozen mode. Pass absolute input and output paths for explicit resource selection.
 
