@@ -25,6 +25,14 @@ NAVY = colors.HexColor("#163b58")
 MUTED = colors.HexColor("#50667a")
 PALE = colors.HexColor("#eef3f8")
 CONTENT = A4[0] - 92
+METHOD_LABELS_ZH = {
+    "original": "原圖",
+    "laplacian": "拉普拉斯算子",
+    "unsharp": "反遮罩",
+    "high_boost": "高提升濾波",
+    "homomorphic": "同態濾波",
+    "combined": "頻域組合增強",
+}
 
 
 def register_fonts(regular: Path | None, bold: Path | None):
@@ -89,17 +97,18 @@ def image_story(name, outputs, record, styles):
     rows = [["方法", "均值", "標準差", "平均梯度", "L 變異數", "黑 / 白 (%)", "飽和 (%)", "耗時 ms"]]
     for key, m in record["metrics"].items():
         timing = f"{record['runtime_ms'][key]:.2f}" if key in record["runtime_ms"] else "—"
-        rows.append([LABELS[key], f"{m['mean']:.2f}", f"{m['std']:.2f}", f"{m['mean_gradient']:.2f}",
+        rows.append([f"{LABELS[key]}（{METHOD_LABELS_ZH[key]}）", f"{m['mean']:.2f}",
+                     f"{m['std']:.2f}", f"{m['mean_gradient']:.2f}",
                      f"{m['laplacian_variance']:.2f}", f"{m['black_pct']:.3f} / {m['white_pct']:.3f}",
                      f"{m['saturated_pct']:.3f}", timing])
     note = (f"{stem} 演算法共用階段｜高斯細節 {record['runtime_ms']['shared_gaussian']:.2f} ms，"
-            f"正向 FFT 與同態增益 {record['runtime_ms']['shared_frequency']:.2f} ms。")
+            f"正向 FFT 與 Homomorphic（同態濾波）增益 {record['runtime_ms']['shared_frequency']:.2f} ms。")
     return [
         figure(outputs / "comparisons" / f"{stem}_comparison.png", 263),
         Paragraph("原圖與五種增強圖｜相同 0 至 255 灰階顯示。", styles["caption"]),
         figure(outputs / "spectra" / f"{stem}_spectrum.png", 160),
         Paragraph("中心化 log(1 + |Z|) 與沿 v = 0 的實際濾波增益。", styles["caption"]),
-        make_table(rows, styles, [.19, .085, .095, .11, .11, .17, .12, .12]),
+        make_table(rows, styles, [.26, .085, .08, .10, .10, .155, .105, .115]),
         Spacer(1, 5),
         Paragraph(note, styles["caption"]),
     ]
@@ -126,9 +135,9 @@ def dynamic_blocks(results, outputs, styles):
     timing = (f"本次批次耗時 {results['processing_seconds']:.2f} 秒，包含讀檔、量測、PNG 編碼及繪圖。"
               f"各影像記錄的演算法階段合計 {total:.2f} 秒。單法耗時與共用步驟分開列出，"
               "時間為本機此次量測。")
-    discussion = (f"六張圖的組合法平均灰階較原圖改變 {min(changes):+.2f} 至 {max(changes):+.2f} 級，"
-                  f"平均梯度較單獨同態增加 {min(gain):.2f} 至 {max(gain):.2f}。"
-                  f"空間高提升的兩端總飽和率介於 {min(saturation):.3f}% 至 {max(saturation):.3f}%。")
+    discussion = (f"六張圖的 Combined（頻域組合增強）平均灰階較原圖改變 {min(changes):+.2f} 至 {max(changes):+.2f} 級，"
+                  f"平均梯度較 Homomorphic（同態濾波）增加 {min(gain):.2f} 至 {max(gain):.2f}。"
+                  f"空間域的 High-boost（高提升濾波）兩端總飽和率介於 {min(saturation):.3f}% 至 {max(saturation):.3f}%。")
     blocks = {"parameters": [make_table(rows, styles, [.12, .13, .13, .09, .32, .21]), Spacer(1, 6)],
               "timing": [Paragraph(timing, styles["body"])],
               "discussion": [Paragraph(discussion, styles["body"])]}
@@ -151,6 +160,9 @@ def markdown_story(lines, styles, blocks):
             story.append(Paragraph(rich(line[4:]), styles["h3"]))
         elif line.startswith("## "):
             story.append(Paragraph(rich(line[3:]), styles["h2"]))
+        elif re.fullmatch(r"https://\S+", line):
+            url = escape(line)
+            story.append(Paragraph(f'<link href="{url}" color="{NAVY.hexval()}">{url}</link>', styles["body"]))
         elif line == "```":
             code = []
             while index < len(lines) and lines[index].strip() != "```":
@@ -200,8 +212,7 @@ def build(project, inputs, outputs, config, student_file, target, font=None, bol
     title = source[0][2:]
     cover = [Spacer(1, 120), Paragraph("IMAGE PROCESSING  /  HOMEWORK 02", styles["caption"]),
              Paragraph(rich(title), styles["title"]), Paragraph("Image Sharpening", styles["h2"]), Spacer(1, 32)]
-    for label, value in [("姓名", student["name"]), ("學號", student["student_id"]),
-                         ("繳交期限", "2026 年 11 月 30 日"), ("繳交日期", student.get("submission_date") or "待繳交")]:
+    for label, value in [("姓名", student["name"]), ("學號", student["student_id"])]:
         cover.append(Paragraph(rich(f"{label}　{value}"), styles["body"]))
     cover.append(PageBreak())
     story = cover + markdown_story(source[1:], styles, dynamic_blocks(results, outputs, styles))

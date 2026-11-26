@@ -47,7 +47,7 @@ uv run --locked python scripts/compare_parameters.py
 
 ## Build the report, executable, and ZIP
 
-Create `report/student.json` locally with `name` and `student_id` strings. The optional `submission_date` is the date the work was handed in. An empty date displays 待繳交. Build after generating the full outputs:
+Create `report/student.json` locally with `name` and `student_id` strings for the report cover. Build after generating the full outputs:
 
 ```powershell
 uv run --locked python report/build_report.py
@@ -55,7 +55,7 @@ uv run --locked python -m PyInstaller --noconfirm --clean ImageSharpening.spec
 uv run --locked python scripts/build_submission.py
 ```
 
-`report/Image_Sharpening_Report.pdf` is generated from the current Markdown, verified figures, and recorded parameters. The report builder embeds the Windows Microsoft JhengHei TrueType fonts by default. Use `--font` and `--bold-font` if these fonts are installed elsewhere. The report follows the format in the local Chapter 0 slide, page 11.
+`report/Image_Sharpening_Report.pdf` is generated from the current Markdown, verified figures, and recorded parameters. The report builder embeds the Windows Microsoft JhengHei TrueType fonts by default. Use `--font` and `--bold-font` if these fonts are installed elsewhere. The report follows the section order in Chapter 0, page 11. The cover lists the homework title, name, and student ID.
 
 The spec creates a one-file Windows GUI executable `dist/ImageSharpening.exe`. When the official files and results are present, it bundles the PNGs and selected settings. To test CLI mode from PowerShell on a Windows machine permitted to run the executable:
 
@@ -69,8 +69,14 @@ $p.ExitCode
 Get-Content -LiteralPath $summary
 ```
 
-The supplied executable was built as a Windows x86-64 GUI binary. Its embedded images and settings were verified against the saved files. Windows Application Control blocked this binary on the build machine, so executable startup and frozen CLI runtime remain unverified. The source viewer and module CLI were exercised.
+The supplied executable was built as a Windows x86-64 GUI binary. Its embedded images and settings were verified against the saved files. A Windows launch in `--cli` mode from a separate working directory reproduced all 48 saved PNG hashes and the recorded image metrics. The source viewer was exercised. Standalone desktop launch still needs a separate check.
 
-The packaging script uses the local cover metadata, checks that the report and executable correspond to the current results, and verifies every archive member by SHA-256. The result is `submission/<student-id>/` and `submission/<student-id>.zip`. An existing package with different contents is preserved. To create a new package, pass a fresh `--destination`. For a source rebuild from inside an extracted submission, run uv commands in `source/` and use `../HW2_test_image` and `../outputs` as explicit data locations.
+The packaging script uses the local cover metadata, checks that the report and executable correspond to the current results, and verifies every archive member by SHA-256. It creates `submission/<student-id>/` and `submission/<student-id>.zip`. Inside the student-ID directory, `Image_Sharpening_Report.pdf` sits beside `ImageSharpening.exe` and `README.md`. The directory also contains `source/`, `HW2_test_image/`, and `outputs/`. The report Markdown and generator are included under `source/report/`.
 
-The project follows the src layout, desktop navigation, uv, ReportLab, PyInstaller, and validated submission workflow from [Homework #1 at 6a15a6b](https://github.com/whoami13579/Image_Processing_Spatial_Image_Enhancement/tree/6a15a6b4aea3d27ae0190c685aaf9743388dd617). The sharpening algorithms were written independently.
+The script preserves an existing package with different contents. To build a replacement for review, pass a fresh `--destination`. To regenerate the PDF from an extracted package, run this command from `source/`:
+
+```powershell
+uv run --locked python report/build_report.py --input ../HW2_test_image --outputs ../outputs --output ../Image_Sharpening_Report.pdf
+```
+
+The project follows the src layout, desktop navigation, uv, ReportLab, PyInstaller, and validated submission workflow from the previous assignment. Section 2.1 of the report documents the AI assistance used to implement and evaluate the sharpening methods. [Homework #1 at 6a15a6b](https://github.com/whoami13579/Image_Processing_Spatial_Image_Enhancement/tree/6a15a6b4aea3d27ae0190c685aaf9743388dd617)
