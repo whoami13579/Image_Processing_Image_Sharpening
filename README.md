@@ -47,7 +47,7 @@ uv run --locked python scripts/compare_parameters.py
 
 ## Build the report, executable, and ZIP
 
-Create `report/student.json` locally with `name` and `student_id` strings. The optional `submission_date` is the date the work was handed in. An empty date displays 待繳交. Build after generating the full outputs:
+Create `report/student.json` locally with `name` and `student_id` strings for the report cover. Build after generating the full outputs:
 
 ```powershell
 uv run --locked python report/build_report.py
