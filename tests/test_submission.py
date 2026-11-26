@@ -8,15 +8,26 @@ import pytest
 from image_sharpening.artifacts import EXE_NAME, PDF_NAME, verify_results
 from image_sharpening.pipeline import IMAGE_NAMES, file_hash
 from image_sharpening.resources import PROJECT
-from scripts.build_submission import (distribution_hashes, stage_submission, verify_executable,
+from scripts.build_submission import (distribution_hashes, file_map, stage_submission, verify_executable,
                                       verify_zip)
+
+
+def test_file_map_places_pdf_beside_executable_and_keeps_report_sources():
+    student_file = PROJECT / "report/student.json"
+    files = file_map(PROJECT, PROJECT / "HW2_test_image", PROJECT / "outputs",
+                     student_file, {"files": {}})
+    assert files[Path(PDF_NAME)] == PROJECT / "report" / PDF_NAME
+    assert files[Path(EXE_NAME)] == PROJECT / "dist" / EXE_NAME
+    assert Path("report", PDF_NAME) not in files
+    for name in ("report.md", "build_report.py", "student.json"):
+        assert files[Path("source/report") / name] == PROJECT / "report" / name
 
 
 def test_submission_archive_has_only_student_id_root_and_exact_files(tmp_path):
     fixtures = tmp_path / "files"
     fixtures.mkdir()
     files = {}
-    members = [EXE_NAME, f"report/{PDF_NAME}", "source/uv.lock", "outputs/results.json"]
+    members = [EXE_NAME, PDF_NAME, "source/uv.lock", "outputs/results.json"]
     members.extend(f"HW2_test_image/{name}" for name in IMAGE_NAMES)
     for index, member in enumerate(members):
         path = fixtures / f"fixture-{index}"

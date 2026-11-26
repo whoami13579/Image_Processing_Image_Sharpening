@@ -160,6 +160,9 @@ def markdown_story(lines, styles, blocks):
             story.append(Paragraph(rich(line[4:]), styles["h3"]))
         elif line.startswith("## "):
             story.append(Paragraph(rich(line[3:]), styles["h2"]))
+        elif re.fullmatch(r"https://\S+", line):
+            url = escape(line)
+            story.append(Paragraph(f'<link href="{url}" color="{NAVY.hexval()}">{url}</link>', styles["body"]))
         elif line == "```":
             code = []
             while index < len(lines) and lines[index].strip() != "```":

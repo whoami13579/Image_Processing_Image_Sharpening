@@ -46,7 +46,7 @@ def verify_executable(root, exe, inputs, outputs, config, result):
 def file_map(root, inputs, outputs, student_file, result):
     files = {Path(name): root / name for name in ("README.md",)}
     files[Path(EXE_NAME)] = root / "dist" / EXE_NAME
-    files[Path("report") / PDF_NAME] = root / "report" / PDF_NAME
+    files[Path(PDF_NAME)] = root / "report" / PDF_NAME
     files[Path("source/report/student.json")] = student_file
     files.update({Path("source") / name: root / name for name in SOURCE_ROOT_FILES})
     for folder in ("src", "tests", "scripts", "report"):

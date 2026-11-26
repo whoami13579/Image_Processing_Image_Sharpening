@@ -16,7 +16,7 @@
 
 5. Combination of Two or More Image Enhancement Techniques in the Frequency Domain（在頻域結合兩種以上的影像增強技術）
 
-比較骨骼輪廓、細紋、背景顆粒、亮度和飽和比例。影像只用於本課程的影像處理實驗。輸入的灰階值為 0 至 255，分別代表黑與白。
+本作業從影像處理的角度比較邊緣銳利度、局部對比、細節與顆粒、灰階分布及飽和比例，並以頻率響應說明頻域濾波器對不同尺度的影響。輸入的灰階值為 0 至 255，分別代表黑與白。
 
 開發環境為 Windows 11、Python 3.12 和 uv。NumPy 提供浮點與複數陣列運算，Pillow 解碼與儲存 PNG、排版及縮放顯示，Matplotlib 繪製頻譜，Tkinter 顯示視窗。pytest 檢驗手算公式及整合流程，PyInstaller 封裝 Windows 執行檔。專案以 ReportLab 由 Markdown 產生 PDF。
 
@@ -103,7 +103,7 @@ for stage_twiddles in plan:
 
 ### 1.9 Homomorphic Filtering（同態濾波）
 
-照明與反射模型為 `f(x,y) = i(x,y) · r(x,y)`。對數可將正值乘積轉成加法。自然影像常把平緩照明視作偏低頻，局部結構視作帶有較多高頻的成分，兩者的頻帶仍會重疊。實作使用 `z = log1p(f)` 以處理 0 像素，對乘法模型的對數分離是近似。對這批數位射線灰階影像，該模型作為調整局部對比與大尺度亮暗的實驗假設。
+照明與反射模型為 `f(x,y) = i(x,y) · r(x,y)`。對數可將正值乘積轉成加法。自然影像常把平緩照明視作偏低頻，局部結構視作帶有較多高頻的成分，兩者的頻帶仍會重疊。實作使用 `z = log1p(f)` 以處理 0 像素，對乘法模型的對數分離是近似。在本作業中，此模型用於實驗調整局部對比與大尺度亮暗。
 
 對 z 做 FFT 得 Z。逐 bin 建立濾波器，`H = γL + (γH - γL)[1 - exp(-c · D²/D0²)]`。γL 控制接近 DC 的低頻衰減，γH 控制高頻放大量，D0 為轉換尺度，c 控制過渡速度。為保留擴展對數圖的平均值，本作業將 H[0,0] 改為 1，其餘低頻照公式衰減。對數平均保留後，指數域的算術平均仍可變動。
 
@@ -124,7 +124,9 @@ for stage_twiddles in plan:
 
 ### 2.1 試驗與選擇
 
-每張圖製作 Conservative、Moderate、Strong 及 Selected 四欄原尺寸試驗圖。比較手腕細紋、肺野與肋骨、頭骨高反差交界、肘關節間隙、踝部亮區和足部陰影。較大的 σ 與較強增益在多張圖上帶來較粗的邊緣或較顯眼的顆粒。以中等組為起點，對容易受暗端截斷的 2-3、2-5 降低空間與頻域增益。2-2 略降 High-boost Filtering（高提升濾波）的增益，以減少肺野顆粒。2-6 提高 γL 並略降頻域增益，以保留較暗的足部層次。
+本人為資訊工程系學生，正在學習影像處理，沒有醫學影像、人體解剖或 X 光判讀的專業背景，也較難單憑視覺辨別各方法帶來的改善程度。因此，本次使用 AI 建議第五種方法的技術組合、協助實作程式、分析處理結果，並提出參數調整建議。
+
+每張圖製作 Conservative、Moderate、Strong 及 Selected 四欄原尺寸試驗圖。AI 輔助比較邊緣、細節與顆粒，並參考平均灰階、標準差、平均梯度、Laplacian Variance（拉普拉斯變異數）及飽和像素比例。以 Moderate 為起點，依建議對 2-2.png 降低遮罩增益並調高 γL，對 2-3.png 與 2-5.png 減弱銳化增益，對 2-6.png 調高 γL 並略降組合濾波的高頻增益。選定值用於本次比較，作業範圍限於演算法實作及其影像處理效果。
 
 | 試驗 | α | m / σ | k | γL / γH / D0 | Db / kb |
 | --- | --- | --- | --- | --- | --- |
@@ -144,47 +146,49 @@ D0 與 Db 以 cycles/pixel 表示，σ 以像素表示。Unsharp Masking（反�
 
 {{timing}}
 
+後續六張結果頁的圖像觀察由 AI 輔助整理，數值引自結果清單或參數試驗圖。
+
 <!-- page -->
-## 二、實驗結果｜2-1 手腕
+## 二、實驗結果｜2-1.png
 
 {{image:2-1.png}}
 
-空間域的 High-boost（高提升濾波）勾勒出腕骨的邊界，也讓骨內細粒更密集。中等增益的 Laplacian（拉普拉斯算子）保留背景層次。Combined（頻域組合增強）的腕部邊界比 Homomorphic（同態濾波）稍清楚，兩者的整體對比較空間域方法低。
+High-boost（高提升濾波）讓明暗交界與細粒更顯眼，平均梯度由 4.08 升至 5.87，黑端像素由 0.002% 增為 0.223%。
 
 <!-- page -->
-## 二、實驗結果｜2-2 胸部
+## 二、實驗結果｜2-2.png
 
 {{image:2-2.png}}
 
-肋骨邊緣在空間法中較清楚，High-boost（高提升濾波）也一併加強肺野紋理與顆粒，因此選用較低倍率。調整 γL 後，Combined（頻域組合增強）仍略減少大尺度亮暗差，細線增加較溫和。
+High-boost（高提升濾波）讓圖中央的細線及顆粒更顯眼，平均梯度由 3.31 升至 4.80。Combined（頻域組合增強）的平均灰階為 124.70，低於原圖的 127.12，標準差也由 48.53 降至 44.60。
 
 <!-- page -->
-## 二、實驗結果｜2-3 頭骨
+## 二、實驗結果｜2-3.png
 
 {{image:2-3.png}}
 
-頭骨外緣與明亮牙齒周圍容易出現高反差亮邊，強組也使細粒突出。降低空間與頻域增益。原圖上方本來存在黑區，結果表把黑端與白端分開統計，以辨別額外截斷。
+原圖上方已有大面積暗區，黑端像素占 0.534%。High-boost（高提升濾波）讓高反差交界更明顯，黑端像素增為 0.858%，仍低於 Moderate 試驗圖的 0.934%。
 
 <!-- page -->
-## 二、實驗結果｜2-4 肘部
+## 二、實驗結果｜2-4.png
 
 {{image:2-4.png}}
 
-中等組使肘關節間隙與骨輪廓較容易辨識。空間域的 High-boost（高提升濾波）比其餘兩種空間法更強調骨內紋理。Combined（頻域組合增強）稍加深局部輪廓，背景變化較平緩。
+對照圖的差異較集中於輪廓附近。High-boost（高提升濾波）的平均梯度由 2.66 升至 3.90，Combined（頻域組合增強）則升至 3.04，兩者的黑端像素比例均低於 0.01%。
 
 <!-- page -->
-## 二、實驗結果｜2-5 踝部
+## 二、實驗結果｜2-5.png
 
 {{image:2-5.png}}
 
-高對比的踝部邊緣及深色背景對遮罩增益敏感，試驗強組出現較明顯的邊緣加亮和顆粒。降低 α、σ 和遮罩增益後，仍能看見關節邊界，暗端截斷較中等增益的 High-boost（高提升濾波）少。
+明暗交界在銳化後仍然鮮明。High-boost（高提升濾波）的 Selected 試驗圖黑端像素為 0.556%，低於 Moderate 的 0.732%，仍高於原圖的 0.019%。
 
 <!-- page -->
-## 二、實驗結果｜2-6 足部
+## 二、實驗結果｜2-6.png
 
 {{image:2-6.png}}
 
-足部影像平均較暗。頻域參數保留較多低頻，減輕原本中等組的整體變暗。空間域的 High-boost（高提升濾波）清楚標出腳趾和蹠骨，背景細粒也更可見。
+原圖平均灰階為 75.86，是六張原圖中最低。Combined（頻域組合增強）的平均灰階為 73.30，高於 Moderate 試驗圖的 71.96。High-boost（高提升濾波）使部分邊緣和背景顆粒更顯眼，平均梯度由 2.84 升至 4.48。
 
 <!-- page -->
 ## 三、討論與結論
@@ -193,9 +197,9 @@ D0 與 Db 以 cycles/pixel 表示，σ 以像素表示。Unsharp Masking（反�
 
 Laplacian Operator（拉普拉斯算子）直接作用於灰階快速變化處，實作較簡單、運算成本較低，也容易增強高頻顆粒。Unsharp Masking（反遮罩）可用核尺寸和 σ 調整空間尺度，High-boost Filtering（高提升濾波）則可在同一尺度下增大細節反差。兩方法都可能在強邊緣造成過衝。頻域方法以對數灰階重新分配不同尺度的增益，能壓低大尺度變化，也可能降低原圖的全域對比或平均亮度。
 
-Frequency-domain Combination（頻域組合增強）可在同一次逆轉換前分別控制低頻衰減與高頻補強。其增益曲線可逐點核對，並保有接近 Homomorphic Filtering（同態濾波）的整體明暗特性，同時提高局部邊緣反差。空間域的 High-boost（高提升濾波）一般產生更醒目的輪廓。若重視背景平滑，則應同時檢查顆粒和零值比例。六張圖各自有不同的亮度、邊界和紋理，結果適合依觀察目的比較。
+Frequency-domain Combination（頻域組合增強）在同一次逆轉換前結合低頻衰減與高頻補強。頻率響應圖可用來核對增益如何隨頻率變化。六張圖的平均梯度均較 Homomorphic Filtering（同態濾波）高，平均灰階仍低於原圖。
 
-本實驗以可重現的五種手動方法完成六張影像的對照。原圖與處理圖皆以 0 至 255 全灰階顯示，圖表依相同增益尺度解讀。測量提供局部變化與截斷的量化線索，視覺觀察則有助於分辨輪廓變清楚與噪聲被放大的不同情形。
+本實驗以五種手動實作的方法完成六張影像的對照。本人較難單靠視覺區分改善程度，因此以 AI 輔助的圖像比較與可重算的指標說明差異。較高梯度可能來自邊緣、細節或噪聲放大，過強的增益也可能造成過度銳化、亮暗暈圈與飽和。本作業的結論限於這六張圖的影像處理結果，不涉及醫學診斷或臨床影像品質評估。
 
 ## 四、參考文獻與附錄
 
@@ -203,7 +207,13 @@ Frequency-domain Combination（頻域組合增強）可在同一次逆轉換前�
 2. R. C. Gonzalez and R. E. Woods, Digital Image Processing, 4th ed., Pearson.
 3. J. W. Cooley and J. W. Tukey, “An algorithm for the machine calculation of complex Fourier series,” Mathematics of Computation, 19, 297-301, 1965. DOI 10.1090/S0025-5718-1965-0178586-1.
 4. A. V. Oppenheim, R. W. Schafer, and T. G. Stockham, “Nonlinear filtering of multiplied and convolved signals,” Proceedings of the IEEE, 56, 1264-1291, 1968. DOI 10.1109/PROC.1968.6570.
-5. 前次作業 Image Processing Spatial Image Enhancement，commit 6a15a6b。此次沿用 Python src-layout、uv、Tkinter 導覽與背景預覽、Markdown 至 ReportLab PDF、PyInstaller 規格檔及本機 ZIP 驗證等架構模式，五個銳化演算法獨立實作。
+5. 前次作業 Image Processing Spatial Image Enhancement，commit 6a15a6b。此次沿用 Python src-layout、uv、Tkinter 導覽與背景預覽、Markdown 至 ReportLab PDF、PyInstaller 規格檔及本機 ZIP 驗證等架構模式。銳化演算法的開發過程使用第 2.1 節所述的 AI 輔助。
+
+### 原始程式碼（Source Code）
+
+https://github.com/whoami13579/Image_Processing_Image_Sharpening
+
+儲存庫包含原始程式碼、五種演算法的實作、設定檔、測試與報告生成工具。
 
 ### 附錄｜重現入口
 
